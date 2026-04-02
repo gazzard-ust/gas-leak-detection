@@ -1,100 +1,233 @@
-# Gas Leak Detection and Localization System
+<div align="center">
 
-A ROS 2-based robotic system for autonomous gas leak detection and localization using a TurtleBot3 equipped with a CO2 sensor and camera-based crack detection via fine-tuned YOLOWorld.
+# Gas Leak Detection via CO2-Guided Crack Inspection
 
-## System Overview
+### Autonomous TurtleBot3 Navigation with YOLO-World XL and Depth-Anything-V2
 
-The system integrates three subsystems to detect, localize, and approach gas leaks on pipes:
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![ROS 2 Humble](https://img.shields.io/badge/ROS%202-Humble-green.svg)](https://docs.ros.org/en/humble/)
+[![Ultralytics](https://img.shields.io/badge/ultralytics-8.3-purple.svg)](https://github.com/ultralytics/ultralytics)
+[![Dataset](https://img.shields.io/badge/dataset-Roboflow-orange.svg)](https://universe.roboflow.com/gazxard/pipe-crack-detection/dataset/1)
 
-| Module | Description |
-|--------|-------------|
-| **SO1** | ROS 2 network communication — TurtleBot publisher and laptop subscriber for command relay and latency measurement |
-| **SO2** | CO2 concentration monitoring — SenseAir S8 sensor driver publishing real-time CO2 readings via ROS 2 |
-| **SO3/SO4** | Visual crack detection and reactive navigation — YOLOWorld-based detection with depth estimation and autonomous approach |
+</div>
 
-## Architecture
+---
 
-```
-TurtleBot3 (Raspberry Pi)          Laptop (GPU)
-┌──────────────────────┐           ┌──────────────────────────┐
-│  Camera              │  ROS 2    │  YOLOWorld Detection     │
-│  SenseAir S8 Sensor  │ ───────── │  Depth-Anything V2       │
-│  Motor Control       │  Wi-Fi    │  Navigation Controller   │
-│                      │           │  Web GUI (FastAPI)       │
-└──────────────────────┘           └──────────────────────────┘
-```
+**TL;DR** &mdash; A ROS 2 system that detects gas leaks on pipe infrastructure by fusing CO2 concentration sensing with visual crack detection. A TurtleBot3 equipped with a SenseAir S8 sensor monitors CO2 levels while a fine-tuned YOLO-World XL model (mAP@50-95: **86.9%**, Precision: **98.0%**, Recall: **97.5%**) and Depth-Anything-V2 monocular depth estimation identify and approach cracked pipe segments.
 
-## Prerequisites
+## Why This Matters
+
+Manual pipe inspection in industrial and urban environments is slow, hazardous, and error-prone. Gas leaks on pipe networks often manifest as both elevated CO2 concentrations and visible surface cracks &mdash; but neither signal alone is sufficient for reliable detection. This system combines both modalities in a closed-loop autonomous pipeline: CO2 readings flag anomalous regions, and visual crack detection confirms the source at close range.
+
+## Key Results
+
+<table>
+<tr>
+<td>
+
+### Crack Detection (YOLO-World XL)
+
+| Metric | Test Set | Val Set |
+|--------|:--------:|:-------:|
+| mAP@50-95 | **0.869** | 0.858 |
+| mAP@50 | 0.984 | 0.977 |
+| Precision | 0.980 | 0.988 |
+| Recall | 0.975 | 0.963 |
+| F1 | 0.978 | 0.976 |
+
+<sub>Fine-tuned on 2,617 images (3 crack classes). Trained on NVIDIA DGX A100.</sub>
+
+</td>
+<td>
+
+### Per-Class AP@50-95
+
+| Class | AP@50-95 | AP@50 |
+|-------|:--------:|:-----:|
+| Dummy crack | **95.6%** | 99.5% |
+| PVC pipe crack | 91.2% | 99.2% |
+| Paper crack | 74.0% | 97.2% |
+
+<sub>400 labels per class. Substrate complexity governs detection difficulty.</sub>
+
+</td>
+</tr>
+</table>
+
+### Inference Latency (CPU, TurtleBot3 Laptop)
+
+| Component | Mean &pm; Std |
+|-----------|:---:|
+| YOLO-World XL | 860.65 &pm; 52.05 ms |
+| Depth-Anything-V2 | 1019.65 &pm; 66.23 ms |
+| Total pipeline | 1880.31 &pm; 101.36 ms |
+| Throughput | **0.53 &pm; 0.03 FPS** |
+
+<sub>92 frames, CPU-only inference. GPU deployment recommended for real-time operation.</sub>
+
+## System Architecture
+
+The system is organized into three specific objectives (SO):
+
+| Module | Description | Hardware |
+|--------|-------------|----------|
+| **SO1** &mdash; Network Latency | ROS 2 pub/sub timing analysis between TurtleBot3 and laptop | TurtleBot3 Waffle Pi |
+| **SO2** &mdash; CO2 Sensing | SenseAir S8 sensor driver over UART/Modbus | Raspberry Pi + SenseAir S8 |
+| **SO3 & SO4** &mdash; Detection + Navigation | YOLO-World XL crack detection, Depth-Anything-V2 depth estimation, reactive navigation, web GUI | Laptop (CUDA optional) |
+
+### ROS 2 Topics
+
+| Topic | Type | Direction | Description |
+|-------|------|-----------|-------------|
+| `/image/compressed` | CompressedImage | Pub &rarr; Sub | Camera frames (640&times;480, 30 FPS) |
+| `/cmd_vel` | Twist | Sub &rarr; Robot | Movement commands |
+| `/co2_concentration` | Float32 | Pub &rarr; Sub | CO2 ppm from SenseAir S8 |
+| `/co2_sensor_data` | String (JSON) | Pub &rarr; Sub | Sensor metadata + response times |
+| `/timing_data` | String (JSON) | Pub &rarr; Sub | Network latency measurements |
+
+## Dataset
+
+| | Train | Val | Test | Total |
+|---|:---:|:---:|:---:|:---:|
+| Images | 2,292 | 217 | 108 | 2,617 |
+| Labels per class | 400 | &mdash; | &mdash; | 400 |
+
+Three crack classes on a texture gradient: **Dummy crack** (smooth PVC) &middot; **PVC pipe crack** (smooth PVC, real fractures) &middot; **Paper crack** (porous tissue)
+
+Available on [Roboflow Universe](https://universe.roboflow.com/gazxard/pipe-crack-detection/dataset/1) under CC BY 4.0.
+
+## Quick Start
+
+### Prerequisites
 
 - ROS 2 Humble
-- Python 3.8+
-- CUDA-capable GPU (for detection model)
-- TurtleBot3 Waffle Pi
-- SenseAir S8 CO2 sensor
+- Python 3.10+
+- CUDA-capable GPU (recommended, not required)
+- TurtleBot3 Waffle Pi with Raspberry Pi
+- SenseAir S8 CO2 sensor (UART)
 
-## Installation
+### Installation
 
 ```bash
-git clone https://github.com/gazzard-ust/gas-leak-detection.git
+# 1. Clone the repository
+git clone git@github.com:gazzard-ust/gas-leak-detection.git
 cd gas-leak-detection
-```
 
-### Python Dependencies
-
-```bash
+# 2. Install Python dependencies
 pip install torch torchvision ultralytics transformers fastapi uvicorn opencv-python pillow numpy pyserial
-```
 
-### Build the ROS 2 Package (SO3/SO4)
-
-```bash
+# 3. Build the ROS 2 package
 cd SO34/src
 colcon build --packages-select MEx3
 source install/setup.bash
+
+# 4. Download model weights (not included in repo)
+# Place best.pt in SO34/src/MEx3/MEx3/
 ```
 
-### Model Weights
+### Running the System
 
-The fine-tuned YOLOWorld model (`best.pt`) is not included in this repository due to size constraints. Place your trained model weights in:
-- `SO34/src/MEx3/MEx3/best.pt`
-
-## Usage
-
-See `TERMINAL_COMMANDS` for the full step-by-step startup sequence. In summary:
-
-1. **Terminal 1** — TurtleBot bringup
-2. **Terminal 2** — CO2 sensor node (`ros2 run senseair_s8_driver senseair_s8_node`)
-3. **Terminal 3** — Camera image publisher (`python3 image_publisher.py`)
-4. **Terminal 4** — Detection GUI (`ros2 run MEx3 gazzard_gui_detection_final`)
-
-Access the web interface at `http://localhost:8000` to set detection targets and monitor the robot.
-
-## Project Structure
-
-```
-gas-leak-detection/
-├── SO1/                        # Network communication
-│   ├── turtlebot_publisher.py  # TurtleBot command & timing publisher
-│   └── laptop_subscriber.py    # Laptop-side latency analyzer
-├── SO2/                        # CO2 sensor
-│   ├── senseair_s8_publisher.py
-│   ├── setup_scripts/
-│   └── test_scripts/
-├── SO34/                       # Detection & navigation
-│   ├── src/MEx3/               # ROS 2 package source
-│   ├── EXPECTED_OUTPUTS_MEASUREMENT_GUIDE.md
-│   ├── YOLOWORLD_FINETUNING_EXPLAINED.md
-│   └── README.md               # Detailed SO3/SO4 documentation
-├── TERMINAL_COMMANDS           # Startup instructions
-└── README.md
+**Terminal 1** &mdash; TurtleBot3 Bringup (SSH into robot):
+```bash
+export TURTLEBOT3_MODEL=waffle_pi
+export ROS_DOMAIN_ID=27
+ros2 launch turtlebot3_bringup robot.launch.py
 ```
 
-## Documentation
+**Terminal 2** &mdash; CO2 Sensor (SSH into robot):
+```bash
+export ROS_DOMAIN_ID=27
+ros2 run senseair_s8_driver senseair_s8_node
+```
 
-- [`SO34/README.md`](SO34/README.md) — Detailed documentation for the detection and navigation subsystem
-- [`SO34/YOLOWORLD_FINETUNING_EXPLAINED.md`](SO34/YOLOWORLD_FINETUNING_EXPLAINED.md) — YOLOWorld fine-tuning process
-- [`SO34/EXPECTED_OUTPUTS_MEASUREMENT_GUIDE.md`](SO34/EXPECTED_OUTPUTS_MEASUREMENT_GUIDE.md) — Validation and measurement procedures
+**Terminal 3** &mdash; Camera Publisher (on robot):
+```bash
+export ROS_DOMAIN_ID=27
+python3 image_publisher.py
+```
+
+**Terminal 4** &mdash; Detection GUI (laptop):
+```bash
+export ROS_DOMAIN_ID=27
+source SO34/install/setup.bash
+ros2 run MEx3 gazzard_gui_detection_final
+# Open http://localhost:8000 in browser
+```
+
+### Web Interface Endpoints
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /set_target?object_name=<name>` | Set tracking target |
+| `GET /reset` | Reset system state |
+| `GET /stop` | Emergency stop |
+| `GET /robot_status` | Current state JSON |
+| `GET /video_feed` | Live camera stream |
+| `GET /depth_feed` | Live depth visualization |
+
+## Training Configuration
+
+| Parameter | Value |
+|-----------|-------|
+| Model | YOLO-World XL (fine-tuned) |
+| Optimizer | AdamW |
+| Learning rate | 2e-4 (cosine decay to 1%) |
+| Epochs | 100 (early stopping, patience=20) |
+| Image size | 640 |
+| Augmentation | HSV, flip, mosaic, mixup, rotation, scale, shear |
+| Weight decay | 0.05 |
+| Hardware | NVIDIA DGX A100 |
+
+## Repository Structure
+
+```
+.
+├── SO1/                                    # Network latency analysis
+│   ├── turtlebot_publisher.py              # Publishes Twist + timing to /cmd_vel
+│   └── laptop_subscriber.py                # Subscribes & logs latency stats
+├── SO2/                                    # CO2 sensor interface
+│   ├── senseair_s8_publisher.py            # ROS 2 node for SenseAir S8 (Modbus/UART)
+│   ├── test_scripts/
+│   │   └── test_senseair_s8.py             # Standalone sensor validation
+│   └── setup_scripts/
+│       ├── install_complete_system.sh       # Full system installer
+│       └── setup_raspberry_pi_helper.sh     # Raspberry Pi setup
+├── SO34/                                   # Detection & navigation
+│   ├── src/MEx3/
+│   │   ├── MEx3/
+│   │   │   ├── gazzard_gui_detection_final.py # Production: crack detection + navigation
+│   │   │   ├── gazzard_gui_v2.py           # Crack detection with geometric filtering
+│   │   │   ├── gazzard_gui_v3.py           # Detection variant v3
+│   │   │   ├── gazzard_gui.py              # Base reactive navigation GUI
+│   │   │   ├── image_publisher.py          # Camera capture node
+│   │   │   ├── image_subscriber.py         # Core detection + depth + navigation
+│   │   │   └── background.png              # Web UI background
+│   │   ├── setup.py                        # ROS 2 ament_python package config
+│   │   ├── package.xml                     # Package manifest
+│   │   └── test/                           # Standard ament tests
+│   ├── YOLOWORLD_FINETUNING_EXPLAINED.md   # Training methodology documentation
+│   ├── EXPECTED_OUTPUTS_MEASUREMENT_GUIDE.md # Evaluation protocol
+│   ├── flow chart                          # System flow diagram
+│   └── README.md                           # SO34-specific documentation
+├── TERMINAL_COMMANDS                       # Quick-start terminal commands
+├── .gitignore
+└── README.md                               # This file
+```
+
+## Citation
+
+```bibtex
+@thesis{pangaliman2026gasleak,
+  title={Gas Leak Detection and Localization via CO2-Guided Crack Inspection
+         on Pipe Infrastructure Using Autonomous Mobile Robot},
+  author={Pangaliman, Ma. Madecheen S. and Biasbas, Mark Kenneth and
+          Flores, Faustino Miguel and Gatchalian, Carl Christian and
+          Velasco, Lorin Angela and Yadao, Dulce Maria},
+  school={University of the Philippines},
+  year={2026}
+}
+```
 
 ## License
 
-MIT
+Code: MIT &middot; Dataset: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
