@@ -1,0 +1,45 @@
+SSH for terminal 1, 2 and 3:
+
+ssh ubuntu@<TURTLEBOT_IP>
+#ip address may vary
+password: <PASSWORD>
+
+
+
+Run this on Terminal 1 (Bringup):
+
+export TURTLEBOT3_MODEL=waffle_pi
+export LDS_MODEL=LDS-01
+export ROS_DOMAIN_ID=27
+source /opt/ros/humble/setup.bash
+ros2 launch turtlebot3_bringup robot.launch.py
+
+
+
+Run this on Terminal 2 (Activate Gas Sensor):
+
+source /opt/ros/humble/setup.bash
+export ROS_DOMAIN_ID=27
+cd ~/ros2_ws
+source install/setup.bash
+ros2 run senseair_s8_driver senseair_s8_node
+
+
+
+Run this on Terminal 3 (Image Publisher):
+
+source /opt/ros/humble/setup.bash
+export ROS_DOMAIN_ID=27
+python3 image_publisher.py
+
+
+
+Run this on Terminal 4 (Image Subscriber):
+
+conda activate c1thesis
+export PYTHONPATH="$CONDA_PREFIX/lib/python3.10/site-packages:$PYTHONPATH"
+cd Documents/gas-leak-detection/SO34
+export ROS_DOMAIN_ID=27
+source install/setup.bash
+ros2 run MEx3 gazzard_gui_detection_final
+

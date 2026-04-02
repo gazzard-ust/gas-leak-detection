@@ -1,0 +1,291 @@
+Here's the complete detailed flow diagram:
+
+
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                                    ACTIVE_SCANNING                                       │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                         │
+│  ┌─────────────────────────────────────────────────────────────────────────────────┐    │
+│  │                         0. CHECK FOR CRACK DETECTION                            │    │
+│  │                            (Checked continuously)                               │    │
+│  ├─────────────────────────────────────────────────────────────────────────────────┤    │
+│  │                                                                                 │    │
+│  │                              crack_detected?                                    │    │
+│  │                                    │                                            │    │
+│  │                    ┌───────────────┴───────────────┐                            │    │
+│  │                  (YES)                           (NO)                           │    │
+│  │                    │                               │                            │    │
+│  │                    ↓                               ↓                            │    │
+│  │         ┌──────────────────────┐       ┌────────────────────────────┐           │    │
+│  │         │ 🎯 CRACK FOUND!      │       │ Continue scan/move cycle   │           │    │
+│  │         │                      │       └────────────────────────────┘           │    │
+│  │         │ • Stop robot         │                                                │    │
+│  │         │ • Reset scan_phase   │                                                │    │
+│  │         │ • → LOCALIZATION     │                                                │    │
+│  │         └──────────────────────┘                                                │    │
+│  │                                                                                 │    │
+│  └─────────────────────────────────────────────────────────────────────────────────┘    │
+│                                           │                                             │
+│                                           ↓                                             │
+│  ╔═════════════════════════════════════════════════════════════════════════════════╗    │
+│  ║              PHASE 1: 360° SCANNING (scan_phase = 'scanning')                   ║    │
+│  ╠═════════════════════════════════════════════════════════════════════════════════╣    │
+│  ║                                                                                 ║    │
+│  ║  Parameters:                                                                    ║    │
+│  ║  • SCAN_ANGLES = 8 directions                                                   ║    │
+│  ║  • SCAN_DURATION_PER_ANGLE = 2.0 sec/direction                                  ║    │
+│  ║  • ROTATION_STEP = 0.15 rad/s                                                   ║    │
+│  ║  • Total scan time = 8 × 2.0 = 16 seconds                                       ║    │
+│  ║                                                                                 ║    │
+│  ║  ┌─────────────────────────────────────────────────────────────────────────┐    ║    │
+│  ║  │                                                                         │    ║    │
+│  ║  │   Direction 1 (0°)    →  Record CO2  →  Rotate 45°                      │    ║    │
+│  ║  │         ↓                                                               │    ║    │
+│  ║  │   Direction 2 (45°)   →  Record CO2  →  Rotate 45°                      │    ║    │
+│  ║  │         ↓                                                               │    ║    │
+│  ║  │   Direction 3 (90°)   →  Record CO2  →  Rotate 45°                      │    ║    │
+│  ║  │         ↓                                                               │    ║    │
+│  ║  │   Direction 4 (135°)  →  Record CO2  →  Rotate 45°                      │    ║    │
+│  ║  │         ↓                                                               │    ║    │
+│  ║  │   Direction 5 (180°)  →  Record CO2  →  Rotate 45°                      │    ║    │
+│  ║  │         ↓                                                               │    ║    │
+│  ║  │   Direction 6 (225°)  →  Record CO2  →  Rotate 45°                      │    ║    │
+│  ║  │         ↓                                                               │    ║    │
+│  ║  │   Direction 7 (270°)  →  Record CO2  →  Rotate 45°                      │    ║    │
+│  ║  │         ↓                                                               │    ║    │
+│  ║  │   Direction 8 (315°)  →  Record CO2  →  DONE                            │    ║    │
+│  ║  │                                                                         │    ║    │
+│  ║  └─────────────────────────────────────────────────────────────────────────┘    ║    │
+│  ║                                           │                                     ║    │
+│  ║                                           ↓                                     ║    │
+│  ║  ┌─────────────────────────────────────────────────────────────────────────┐    ║    │
+│  ║  │                      FIND BEST DIRECTION                                │    ║    │
+│  ║  │                                                                         │    ║    │
+│  ║  │  • Average CO2 readings for each direction                              │    ║    │
+│  ║  │  • Select direction with MAXIMUM CO2                                    │    ║    │
+│  ║  │  • Store as best_direction                                              │    ║    │
+│  ║  └─────────────────────────────────────────────────────────────────────────┘    ║    │
+│  ║                                           │                                     ║    │
+│  ║                           ┌───────────────┴───────────────┐                     ║    │
+│  ║                           │                               │                     ║    │
+│  ║                    (has readings)                   (no readings)               ║    │
+│  ║                           │                               │                     ║    │
+│  ║                           ↓                               ↓                     ║    │
+│  ║                 ┌──────────────────┐            ┌──────────────────┐            ║    │
+│  ║                 │ → PHASE 2        │            │ → STANDBY        │            ║    │
+│  ║                 └──────────────────┘            └──────────────────┘            ║    │
+│  ║                                                                                 ║    │
+│  ╚═════════════════════════════════════════════════════════════════════════════════╝    │
+│                                           │                                             │
+│                                           ↓                                             │
+│  ╔═════════════════════════════════════════════════════════════════════════════════╗    │
+│  ║              PHASE 2: MOVE TOWARD BEST DIRECTION (scan_phase = 'moving')        ║    │
+│  ╠═════════════════════════════════════════════════════════════════════════════════╣    │
+│  ║                                                                                 ║    │
+│  ║  Parameters:                                                                    ║    │
+│  ║  • MOVEMENT_STEP = 0.05 m/s                                                     ║    │
+│  ║  • MOVE_AFTER_SCAN_DURATION = 3.0 seconds                                       ║    │
+│  ║                                                                                 ║    │
+│  ║  ┌─────────────────────────────────────────────────────────────────────────┐    ║    │
+│  ║  │                                                                         │    ║    │
+│  ║  │   🚗 Moving forward toward best_direction                               │    ║    │
+│  ║  │                                                                         │    ║    │
+│  ║  │   • Linear velocity: 0.05 m/s                                           │    ║    │
+│  ║  │   • Angular velocity: 0.0 rad/s                                         │    ║    │
+│  ║  │   • Duration: 3.0 seconds                                               │    ║    │
+│  ║  │   • Distance covered: ~0.15 meters                                      │    ║    │
+│  ║  │                                                                         │    ║    │
+│  ║  │   (Crack detection still checked during movement)                       │    ║    │
+│  ║  │                                                                         │    ║    │
+│  ║  └─────────────────────────────────────────────────────────────────────────┘    ║    │
+│  ║                                           │                                     ║    │
+│  ║                                           ↓                                     ║    │
+│  ║                              ┌────────────────────────┐                         ║    │
+│  ║                              │ Movement complete      │                         ║    │
+│  ║                              │                        │                         ║    │
+│  ║                              │ • Stop robot           │                         ║    │
+│  ║                              │ • Reset scan_co2       │                         ║    │
+│  ║                              │ • scan_phase='scanning'│                         ║    │
+│  ║                              │ • → Back to PHASE 1    │                         ║    │
+│  ║                              └────────────────────────┘                         ║    │
+│  ║                                                                                 ║    │
+│  ╚═════════════════════════════════════════════════════════════════════════════════╝    │
+│                                                                                         │
+│                              ┌─────────────────────────────┐                            │
+│                              │     LOOP CONTINUES UNTIL    │                            │
+│                              │      CRACK IS DETECTED      │                            │
+│                              └─────────────────────────────┘                            │
+│                                                                                         │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+                                            │
+                                            │ (crack_detected = True)
+                                            ↓
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                                     LOCALIZATION                                         │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                         │
+│  Purpose: Approach detected crack until within 10 cm, then verify with CO2              │
+│                                                                                         │
+│  ┌─────────────────────────────────────────────────────────────────────────────────┐    │
+│  │                         1. CHECK IF CRACK IS STILL VISIBLE                      │    │
+│  ├─────────────────────────────────────────────────────────────────────────────────┤    │
+│  │                                                                                 │    │
+│  │                              crack_detected?                                    │    │
+│  │                                    │                                            │    │
+│  │                    ┌───────────────┴───────────────┐                            │    │
+│  │                  (YES)                           (NO)                           │    │
+│  │                    │                               │                            │    │
+│  │                    ↓                               ↓                            │    │
+│  │         ┌──────────────────────┐       ┌────────────────────────────────────┐   │    │
+│  │         │ Continue to step 2   │       │ ❌ LOST SIGHT OF CRACK             │   │    │
+│  │         └──────────────────────┘       │                                    │   │    │
+│  │                                        │ • Stop robot                       │   │    │
+│  │                                        │ • Log: "Lost sight of crack"       │   │    │
+│  │                                        │ • Increment false_negatives        │   │    │
+│  │                                        │ • Reset scan data                  │   │    │
+│  │                                        │ • → ACTIVE_SCANNING                │   │    │
+│  │                                        └────────────────────────────────────┘   │    │
+│  │                                                                                 │    │
+│  └─────────────────────────────────────────────────────────────────────────────────┘    │
+│                                           │                                             │
+│                                           ↓                                             │
+│  ┌─────────────────────────────────────────────────────────────────────────────────┐    │
+│  │                         2. CHECK DISTANCE TO CRACK                              │    │
+│  ├─────────────────────────────────────────────────────────────────────────────────┤    │
+│  │                                                                                 │    │
+│  │  Parameters:                                                                    │    │
+│  │  • STOPPING_DISTANCE_CM = 10.0 cm                                               │    │
+│  │  • MOVEMENT_STEP = 0.05 m/s                                                     │    │
+│  │                                                                                 │    │
+│  │                         crack_distance ≤ 10 cm?                                 │    │
+│  │                                    │                                            │    │
+│  │                    ┌───────────────┴───────────────┐                            │    │
+│  │                  (YES)                           (NO)                           │    │
+│  │                    │                               │                            │    │
+│  │                    ↓                               ↓                            │    │
+│  │         ┌──────────────────────┐       ┌────────────────────────────────────┐   │    │
+│  │         │ Stop robot           │       │ 🚗 KEEP APPROACHING                │   │    │
+│  │         │ → Go to step 3       │       │                                    │   │    │
+│  │         └──────────────────────┘       │ • Move forward (0.05 m/s)          │   │    │
+│  │                                        │ • Track approach speeds            │   │    │
+│  │                                        │ • Update max speeds used           │   │    │
+│  │                                        │ • Display: "Approaching crack |    │   │    │
+│  │                                        │   Distance: XX cm | CO2: XX ppm"   │   │    │
+│  │                                        │ • Loop back to step 1              │   │    │
+│  │                                        └────────────────────────────────────┘   │    │
+│  │                                                                                 │    │
+│  └─────────────────────────────────────────────────────────────────────────────────┘    │
+│                                           │                                             │
+│                                           ↓                                             │
+│  ┌─────────────────────────────────────────────────────────────────────────────────┐    │
+│  │                         3. STOP AND CHECK CO2 ELEVATION                         │    │
+│  ├─────────────────────────────────────────────────────────────────────────────────┤    │
+│  │                                                                                 │    │
+│  │  Robot has stopped at ≤ 10 cm from crack                                        │    │
+│  │  Now verify with CO2 sensor                                                     │    │
+│  │                                                                                 │    │
+│  │  Condition: is_co2_elevated() → CO2 > 500 ppm                                   │    │
+│  │                                                                                 │    │
+│  │                              CO2 > 500 ppm?                                     │    │
+│  │                                    │                                            │    │
+│  │                    ┌───────────────┴───────────────┐                            │    │
+│  │                  (YES)                           (NO)                           │    │
+│  │                    │                               │                            │    │
+│  │                    ↓                               ↓                            │    │
+│  │  ┌──────────────────────────────────┐  ┌────────────────────────────────────┐   │    │
+│  │  │ ✅ TARGET_CONFIRMED              │  │ ⚠️ FALSE POSITIVE                  │   │    │
+│  │  │                                  │  │                                    │   │    │
+│  │  │ Both conditions met:             │  │ • Crack found but NO elevated CO2  │   │    │
+│  │  │ • Crack ≤ 10 cm ✓                │  │ • Log warning message              │   │    │
+│  │  │ • CO2 > 500 ppm ✓                │  │ • Increment false_positives        │   │    │
+│  │  │                                  │  │ • Reset scan data                  │   │    │
+│  │  │ Actions:                         │  │ • → ACTIVE_SCANNING                │   │    │
+│  │  │ • Log success message            │  │                                    │   │    │
+│  │  │ • Increment successful_confirms  │  │ "Crack found but CO2 not elevated  │   │    │
+│  │  │ • Record stopping distance       │  │  (XX ppm ≤ 500 ppm)"               │   │    │
+│  │  │ • Record approach duration       │  │                                    │   │    │
+│  │  │ • Store confirmation_data:       │  └────────────────────────────────────┘   │    │
+│  │  │   - crack_distance               │                                           │    │
+│  │  │   - co2_level                    │                                           │    │
+│  │  │   - timestamp                    │                                           │    │
+│  │  │   - co2_status (ELEVATED/HIGH/   │                                           │    │
+│  │  │     LEAK_CONFIRMED)              │                                           │    │
+│  │  │   - approach_duration            │                                           │    │
+│  │  │ • target_confirmed = True        │                                           │    │
+│  │  │ • → TARGET_CONFIRMED             │                                           │    │
+│  │  └──────────────────────────────────┘                                           │    │
+│  │                                                                                 │    │
+│  └─────────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                         │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+Summary Table
+State	Phase/Step	Condition	Action	Next State
+ACTIVE_SCANNING	Any	Crack detected	Stop, immediate transition	LOCALIZATION
+ACTIVE_SCANNING	Phase 1	Scanning (angle < 8)	Rotate 45°, record CO2	ACTIVE_SCANNING
+ACTIVE_SCANNING	Phase 1	Scan complete, has readings	Find best direction	Phase 2
+ACTIVE_SCANNING	Phase 1	Scan complete, no readings	No data	STANDBY
+ACTIVE_SCANNING	Phase 2	Moving (time < 3s)	Move forward (0.05 m/s)	ACTIVE_SCANNING
+ACTIVE_SCANNING	Phase 2	Movement complete	Reset, start new scan	Phase 1
+LOCALIZATION	Step 1	Crack visible	Continue to step 2	LOCALIZATION
+LOCALIZATION	Step 1	Crack NOT visible	Lost sight	ACTIVE_SCANNING
+LOCALIZATION	Step 2	Distance > 10 cm	Keep approaching	LOCALIZATION
+LOCALIZATION	Step 2	Distance ≤ 10 cm	Stop, check CO2	Step 3
+LOCALIZATION	Step 3	CO2 > 500 ppm	Confirmed!	TARGET_CONFIRMED
+LOCALIZATION	Step 3	CO2 ≤ 500 ppm	False positive	ACTIVE_SCANNING
+Key Parameters
+Parameter	Value	Description
+SCAN_ANGLES	8	Number of directions in 360° scan
+SCAN_DURATION_PER_ANGLE	2.0 sec	Time spent at each angle
+ROTATION_STEP	0.15 rad/s	Rotation speed during scan
+MOVE_AFTER_SCAN_DURATION	3.0 sec	Time to move after scan
+MOVEMENT_STEP	0.05 m/s	Forward movement speed
+STOPPING_DISTANCE_CM	10.0 cm	Distance to stop at crack
+CO2 threshold	500 ppm	CO2 level for confirmation
+Visual Cycle Summary
+
+                              ┌──────────────────────────────────────┐
+                              │              STANDBY                  │
+                              │         (CO2 > 500 ppm?)              │
+                              └─────────────────┬────────────────────┘
+                                                │ YES
+                                                ↓
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                                  ACTIVE_SCANNING                                     │
+│  ┌────────────────────────────────────────────────────────────────────────────────┐ │
+│  │                                                                                │ │
+│  │    ┌─────────────┐         ┌─────────────┐         ┌─────────────┐             │ │
+│  │    │   PHASE 1   │         │   PHASE 2   │         │   PHASE 1   │             │ │
+│  │    │  360° Scan  │ ──────→ │    Move     │ ──────→ │  360° Scan  │ ──→ ...     │ │
+│  │    │  (16 sec)   │         │   (3 sec)   │         │  (16 sec)   │             │ │
+│  │    └─────────────┘         └─────────────┘         └─────────────┘             │ │
+│  │                                                                                │ │
+│  │                        (Repeat until crack detected)                           │ │
+│  │                                                                                │ │
+│  └────────────────────────────────────────────────────────────────────────────────┘ │
+└───────────────────────────────────────┬─────────────────────────────────────────────┘
+                                        │ CRACK DETECTED!
+                                        ↓
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                                   LOCALIZATION                                       │
+│                                                                                     │
+│    ┌─────────────┐         ┌─────────────┐         ┌─────────────┐                  │
+│    │  Crack      │   YES   │  Distance   │   YES   │  CO2 > 500  │                  │
+│    │  Visible?   │ ──────→ │  ≤ 10 cm?   │ ──────→ │    ppm?     │                  │
+│    └──────┬──────┘         └──────┬──────┘         └──────┬──────┘                  │
+│           │ NO                    │ NO                    │                         │
+│           ↓                       ↓                       │                         │
+│    ┌─────────────┐         ┌─────────────┐               │                         │
+│    │    Lost     │         │    Keep     │               │                         │
+│    │   Sight     │         │ Approaching │               │                         │
+│    │ → ACTIVE_   │         │   (loop)    │               ├─────────┐               │
+│    │  SCANNING   │         └─────────────┘               │         │               │
+│    └─────────────┘                                     (YES)     (NO)              │
+│                                                          │         │               │
+│                                                          ↓         ↓               │
+│                                                   ┌──────────┐ ┌──────────┐        │
+│                                                   │ TARGET_  │ │  False   │        │
+│                                                   │CONFIRMED │ │ Positive │        │
+│                                                   │    ✅    │ │→ ACTIVE_ │        │
+│                                                   └──────────┘ │ SCANNING │        │
+│                                                                └──────────┘        │
+└─────────────────────────────────────────────────────────────────────────────────────┘

@@ -1,0 +1,21 @@
+# Build artifacts
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Model weights (too large for GitHub, download separately)
+*.pt
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+*.csv
