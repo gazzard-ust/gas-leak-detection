@@ -21,9 +21,9 @@ Manual pipe inspection in industrial and urban environments is slow, hazardous, 
 
 ## 📊 Key Results
 
-<table>
-<tr>
-<td valign="top">
+<table border="0" cellspacing="0" cellpadding="0" style="border: none;">
+<tr style="border: none;">
+<td valign="top" style="border: none;">
 
 ### 🎯 Crack Detection (YOLO-World XL)
 
@@ -38,7 +38,7 @@ Manual pipe inspection in industrial and urban environments is slow, hazardous, 
 <sub>Fine-tuned on 2,617 images (3 crack classes). Trained on NVIDIA DGX A100.</sub>
 
 </td>
-<td valign="top">
+<td valign="top" style="border: none;">
 
 ### 🏷️ Per-Class AP@50-95
 
