@@ -67,13 +67,25 @@ Manual pipe inspection in industrial and urban environments is slow, hazardous, 
 
 ## 🏗️ System Architecture
 
-The system is organized into three functional areas:
+This repository is a single ROS 2 `ament_python` package (`MEx3`). Clone it into your colcon workspace and build:
 
-| Module | Description | Hardware |
-|--------|-------------|----------|
-| 📡 **Network Latency** | ROS 2 pub/sub timing analysis between TurtleBot3 and laptop | TurtleBot3 Waffle Pi |
-| 🌫️ **CO2 Sensing** | SenseAir S8 sensor driver over UART/Modbus | Raspberry Pi + SenseAir S8 |
-| 👁️ **Detection + Navigation** | YOLO-World XL crack detection, Depth-Anything-V2 depth estimation, reactive navigation, web GUI | Laptop (CUDA optional) |
+```bash
+cd ~/ros2_ws/src
+git clone git@github.com:gazzard-ust/gas-leak-detection.git
+cd ~/ros2_ws
+colcon build --packages-select MEx3
+source install/setup.bash
+```
+
+### 📡 ROS 2 Nodes
+
+| Node | Command | Description |
+|------|---------|-------------|
+| 📹 Image Publisher | `ros2 run MEx3 image_publisher` | Camera capture &rarr; `/image/compressed` |
+| 🖥️ Detection GUI | `ros2 run MEx3 gazzard_gui_detection_final` | Crack detection + depth + navigation + web UI |
+| 🤖 TurtleBot Publisher | `ros2 run MEx3 turtlebot_publisher` | Twist commands + timing data |
+| 💻 Laptop Subscriber | `ros2 run MEx3 laptop_subscriber` | Latency analysis &amp; logging |
+| 🌫️ CO2 Sensor | `ros2 run MEx3 senseair_s8_publisher` | SenseAir S8 Modbus/UART driver |
 
 ### 📡 ROS 2 Topics
 
@@ -109,19 +121,20 @@ Three crack classes on a texture gradient: **Dummy crack** (smooth PVC) &middot;
 ### 📥 Installation
 
 ```bash
-# 1. Clone the repository
+# 1. Clone into your ROS 2 workspace
+cd ~/ros2_ws/src
 git clone git@github.com:gazzard-ust/gas-leak-detection.git
-cd gas-leak-detection
 
 # 2. Install Python dependencies
 pip install torch torchvision ultralytics transformers fastapi uvicorn opencv-python pillow numpy pyserial
 
-# 3. Build the ROS 2 package
+# 3. Build
+cd ~/ros2_ws
 colcon build --packages-select MEx3
 source install/setup.bash
 
 # 4. Download model weights (not included in repo)
-# Place best.pt in src/MEx3/MEx3/
+# Place best.pt in MEx3/
 ```
 
 ### ▶️ Running the System
@@ -136,19 +149,18 @@ ros2 launch turtlebot3_bringup robot.launch.py
 **Terminal 2** &mdash; 🌫️ CO2 Sensor (SSH into robot):
 ```bash
 export ROS_DOMAIN_ID=27
-ros2 run senseair_s8_driver senseair_s8_node
+ros2 run MEx3 senseair_s8_publisher
 ```
 
 **Terminal 3** &mdash; 📹 Camera Publisher (on robot):
 ```bash
 export ROS_DOMAIN_ID=27
-python3 nodes/image_publisher.py
+ros2 run MEx3 image_publisher
 ```
 
 **Terminal 4** &mdash; 🖥️ Detection GUI (laptop):
 ```bash
 export ROS_DOMAIN_ID=27
-source install/setup.bash
 ros2 run MEx3 gazzard_gui_detection_final
 # Open http://localhost:8000 in browser
 ```
@@ -180,43 +192,44 @@ ros2 run MEx3 gazzard_gui_detection_final
 ## 📁 Repository Structure
 
 ```
-.
-├── 🧠 src/MEx3/                               # ROS 2 detection package (colcon workspace)
-│   ├── MEx3/
-│   │   ├── __init__.py
-│   │   ├── gazzard_gui_detection_final.py   # Production: crack detection + navigation
-│   │   ├── gazzard_gui.py                   # Base reactive navigation GUI
-│   │   ├── gazzard_gui_v2.py               # Crack detection with geometric filtering
-│   │   ├── gazzard_gui_v3.py               # Detection variant v3
-│   │   ├── image_publisher.py              # Camera capture node
-│   │   ├── image_subscriber.py             # Core detection + depth + navigation
-│   │   └── background.png                  # Web UI background
-│   ├── setup.py                             # ROS 2 ament_python package config
-│   ├── package.xml                          # Package manifest
-│   ├── resource/MEx3
-│   └── test/                                # Standard ament tests
-├── 📡 nodes/                                   # Standalone ROS 2 nodes
-│   ├── turtlebot_publisher.py               # Publishes Twist + timing to /cmd_vel
-│   ├── laptop_subscriber.py                 # Subscribes & logs latency stats
-│   └── senseair_s8_publisher.py             # SenseAir S8 CO2 sensor (Modbus/UART)
-├── 🔧 scripts/                                 # Setup & installation
-│   ├── install_complete_system.sh           # Full system installer
-│   └── setup_raspberry_pi_helper.sh         # Raspberry Pi UART setup
-├── 🧪 tests/                                   # Sensor validation
-│   └── test_senseair_s8.py                  # Standalone SenseAir S8 test
-├── 📚 docs/                                    # Documentation
-│   ├── detection_navigation.md              # Detailed detection & navigation docs
-│   ├── YOLOWORLD_FINETUNING_EXPLAINED.md    # Training methodology
-│   ├── EXPECTED_OUTPUTS_MEASUREMENT_GUIDE.md # Evaluation protocol
-│   └── flow_chart                           # System flow diagram
-├── TERMINAL_COMMANDS                        # Quick-start terminal commands
+.                                          # ROS 2 package root (clone into ros2_ws/src/)
+├── MEx3/                                  # Python module — all nodes
+│   ├── __init__.py
+│   ├── gazzard_gui_detection_final.py     # 🖥️ Production: crack detection + navigation GUI
+│   ├── gazzard_gui.py                     # Base reactive navigation GUI
+│   ├── gazzard_gui_v2.py                  # Geometric filtering variant
+│   ├── gazzard_gui_v3.py                  # Detection variant v3
+│   ├── image_publisher.py                 # 📹 Camera capture node
+│   ├── image_subscriber.py                # Core detection + depth + navigation
+│   ├── turtlebot_publisher.py             # 🤖 Twist + timing publisher
+│   ├── laptop_subscriber.py               # 💻 Latency analysis subscriber
+│   ├── senseair_s8_publisher.py           # 🌫️ CO2 sensor driver (Modbus/UART)
+│   └── background.png                     # Web UI background
+├── resource/MEx3                          # ament resource marker
+├── test/                                  # Package tests
+│   ├── test_copyright.py
+│   ├── test_flake8.py
+│   ├── test_pep257.py
+│   └── test_senseair_s8.py               # 🧪 Standalone sensor validation
+├── scripts/                               # 🔧 Setup & installation
+│   ├── install_complete_system.sh
+│   └── setup_raspberry_pi_helper.sh
+├── docs/                                  # 📚 Documentation
+│   ├── detection_navigation.md
+│   ├── YOLOWORLD_FINETUNING_EXPLAINED.md
+│   ├── EXPECTED_OUTPUTS_MEASUREMENT_GUIDE.md
+│   └── flow_chart
+├── package.xml                            # ROS 2 package manifest
+├── setup.py                               # ament_python build config
+├── setup.cfg                              # Entry point install paths
+├── TERMINAL_COMMANDS                      # Quick-start guide
 ├── .gitignore
-└── 📋 README.md                                # This file
+└── README.md
 ```
 
 ## 📚 Documentation
 
-- [`docs/detection_navigation.md`](docs/detection_navigation.md) &mdash; Detailed documentation for the detection and navigation subsystem
+- [`docs/detection_navigation.md`](docs/detection_navigation.md) &mdash; Detailed detection &amp; navigation subsystem docs
 - [`docs/YOLOWORLD_FINETUNING_EXPLAINED.md`](docs/YOLOWORLD_FINETUNING_EXPLAINED.md) &mdash; YOLOWorld fine-tuning process
 - [`docs/EXPECTED_OUTPUTS_MEASUREMENT_GUIDE.md`](docs/EXPECTED_OUTPUTS_MEASUREMENT_GUIDE.md) &mdash; Validation and measurement procedures
 

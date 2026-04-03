@@ -3,12 +3,14 @@
 <package format="3">
   <name>MEx3</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="madee@todo.todo">madee</maintainer>
-  <license>TODO: License declaration</license>
+  <description>Gas leak detection and localization via CO2-guided crack inspection</description>
+  <maintainer email="gazzard-ust@users.noreply.github.com">gazzard-ust</maintainer>
+  <license>MIT</license>
 
   <depend>rclpy</depend>
   <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
   <depend>cv_bridge</depend>
 
   <test_depend>ament_copyright</test_depend>
