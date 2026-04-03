@@ -1,5 +1,6 @@
-# Build artifacts
+# Workspace build artifacts
 build/
+devel/
 install/
 log/
 

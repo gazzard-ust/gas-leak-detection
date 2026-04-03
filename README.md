@@ -67,12 +67,11 @@ Manual pipe inspection in industrial and urban environments is slow, hazardous, 
 
 ## 🏗️ System Architecture
 
-This repository is a single ROS 2 `ament_python` package (`gas_leak_detection`). Clone it into your colcon workspace and build:
+This repository is a ROS 2 workspace containing the `gas_leak_detection` package:
 
 ```bash
-cd ~/ros2_ws/src
 git clone git@github.com:gazzard-ust/gas-leak-detection.git
-cd ~/ros2_ws
+cd gas-leak-detection
 colcon build --packages-select gas_leak_detection
 source install/setup.bash
 ```
@@ -121,20 +120,19 @@ Three crack classes on a texture gradient: **Dummy crack** (smooth PVC) &middot;
 ### 📥 Installation
 
 ```bash
-# 1. Clone into your ROS 2 workspace
-cd ~/ros2_ws/src
+# 1. Clone the workspace
 git clone git@github.com:gazzard-ust/gas-leak-detection.git
+cd gas-leak-detection
 
 # 2. Install Python dependencies
 pip install torch torchvision ultralytics transformers fastapi uvicorn opencv-python pillow numpy pyserial
 
 # 3. Build
-cd ~/ros2_ws
 colcon build --packages-select gas_leak_detection
 source install/setup.bash
 
 # 4. Download model weights (not included in repo)
-# Place best.pt in gas_leak_detection/
+# Place best.pt in src/gas_leak_detection/gas_leak_detection/
 ```
 
 ### ▶️ Running the System
@@ -192,37 +190,42 @@ ros2 run gas_leak_detection gazzard_gui_detection_final
 ## 📁 Repository Structure
 
 ```
-.                                          # ROS 2 package root (clone into ros2_ws/src/)
-├── gas_leak_detection/                                  # Python module — all nodes
-│   ├── __init__.py
-│   ├── gazzard_gui_detection_final.py     # 🖥️ Production: crack detection + navigation GUI
-│   ├── gazzard_gui.py                     # Base reactive navigation GUI
-│   ├── gazzard_gui_v2.py                  # Geometric filtering variant
-│   ├── gazzard_gui_v3.py                  # Detection variant v3
-│   ├── image_publisher.py                 # 📹 Camera capture node
-│   ├── image_subscriber.py                # Core detection + depth + navigation
-│   ├── turtlebot_publisher.py             # 🤖 Twist + timing publisher
-│   ├── laptop_subscriber.py               # 💻 Latency analysis subscriber
-│   ├── senseair_s8_publisher.py           # 🌫️ CO2 sensor driver (Modbus/UART)
-│   └── background.png                     # Web UI background
-├── resource/gas_leak_detection                          # ament resource marker
-├── test/                                  # Package tests
-│   ├── test_copyright.py
-│   ├── test_flake8.py
-│   ├── test_pep257.py
-│   └── test_senseair_s8.py               # 🧪 Standalone sensor validation
-├── scripts/                               # 🔧 Setup & installation
+.                                              # ROS 2 workspace root
+├── src/
+│   └── gas_leak_detection/                    # ROS 2 ament_python package
+│       ├── gas_leak_detection/                # Python module — all nodes
+│       │   ├── __init__.py
+│       │   ├── gazzard_gui_detection_final.py # 🖥️ Production: crack detection + navigation GUI
+│       │   ├── gazzard_gui.py                 # Base reactive navigation GUI
+│       │   ├── gazzard_gui_v2.py              # Geometric filtering variant
+│       │   ├── gazzard_gui_v3.py              # Detection variant v3
+│       │   ├── image_publisher.py             # 📹 Camera capture node
+│       │   ├── image_subscriber.py            # Core detection + depth + navigation
+│       │   ├── turtlebot_publisher.py         # 🤖 Twist + timing publisher
+│       │   ├── laptop_subscriber.py           # 💻 Latency analysis subscriber
+│       │   ├── senseair_s8_publisher.py       # 🌫️ CO2 sensor driver (Modbus/UART)
+│       │   └── background.png                 # Web UI background
+│       ├── resource/gas_leak_detection        # ament resource marker
+│       ├── test/                              # Package tests
+│       │   ├── test_copyright.py
+│       │   ├── test_flake8.py
+│       │   ├── test_pep257.py
+│       │   └── test_senseair_s8.py            # 🧪 Standalone sensor validation
+│       ├── package.xml                        # ROS 2 package manifest
+│       ├── setup.py                           # ament_python build config
+│       └── setup.cfg                          # Entry point install paths
+├── build/                                     # ⚙️ colcon build output (gitignored)
+├── install/                                   # ⚙️ colcon install output (gitignored)
+├── log/                                       # ⚙️ colcon log output (gitignored)
+├── scripts/                                   # 🔧 Setup & installation
 │   ├── install_complete_system.sh
 │   └── setup_raspberry_pi_helper.sh
-├── docs/                                  # 📚 Documentation
+├── docs/                                      # 📚 Documentation
 │   ├── detection_navigation.md
 │   ├── YOLOWORLD_FINETUNING_EXPLAINED.md
 │   ├── EXPECTED_OUTPUTS_MEASUREMENT_GUIDE.md
 │   └── flow_chart
-├── package.xml                            # ROS 2 package manifest
-├── setup.py                               # ament_python build config
-├── setup.cfg                              # Entry point install paths
-├── TERMINAL_COMMANDS                      # Quick-start guide
+├── TERMINAL_COMMANDS                          # Quick-start guide
 ├── .gitignore
 └── README.md
 ```

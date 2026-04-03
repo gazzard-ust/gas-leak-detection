@@ -20,7 +20,7 @@ Run this on Terminal 2 (Activate Gas Sensor):
 
 source /opt/ros/humble/setup.bash
 export ROS_DOMAIN_ID=27
-cd ~/ros2_ws
+cd ~/gas-leak-detection
 source install/setup.bash
 ros2 run gas_leak_detection senseair_s8_publisher
 
@@ -30,7 +30,7 @@ Run this on Terminal 3 (Image Publisher):
 
 source /opt/ros/humble/setup.bash
 export ROS_DOMAIN_ID=27
-cd ~/ros2_ws
+cd ~/gas-leak-detection
 source install/setup.bash
 ros2 run gas_leak_detection image_publisher
 
@@ -40,7 +40,7 @@ Run this on Terminal 4 (Detection GUI):
 
 conda activate c1thesis
 export PYTHONPATH="$CONDA_PREFIX/lib/python3.10/site-packages:$PYTHONPATH"
-cd ~/ros2_ws
+cd ~/gas-leak-detection
 export ROS_DOMAIN_ID=27
 source install/setup.bash
 ros2 run gas_leak_detection gazzard_gui_detection_final
