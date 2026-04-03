@@ -65,7 +65,7 @@ git clone https://github.com/gazzard-ust/gas-leak-detection.git
 cd gas-leak-detection
 
 # Build the ROS 2 package
-colcon build --packages-select MEx3
+colcon build --packages-select gas_leak_detection
 
 # Source the workspace
 source install/setup.bash
@@ -77,12 +77,12 @@ source install/setup.bash
 
 1. **📸 Start the Image Publisher** (Camera Node):
 ```bash
-ros2 run MEx3 image_publisher
+ros2 run gas_leak_detection image_publisher
 ```
 
 2. **🧠 Start the Navigation System** (Main Controller):
 ```bash
-ros2 run MEx3 image_subscriber
+ros2 run gas_leak_detection image_subscriber
 ```
 
 3. **🌐 Access the Web Interface**:
@@ -180,8 +180,8 @@ ros2 node info /image_subscriber
 ### 📁 File Structure
 
 ```
-src/MEx3/
-├── MEx3/
+src/gas_leak_detection/
+├── gas_leak_detection/
 │   ├── __init__.py
 │   ├── gazzard_gui_detection_final.py  # Production detection + navigation
 │   ├── gazzard_gui.py                  # Base reactive navigation GUI
@@ -195,7 +195,7 @@ src/MEx3/
 ├── setup.cfg                          # Package configuration
 ├── test/                              # Standard ament tests
 └── resource/
-    └── MEx3                           # Package resource marker
+    └── gas_leak_detection                           # Package resource marker
 ```
 
 ### 🔑 Key Classes and Methods

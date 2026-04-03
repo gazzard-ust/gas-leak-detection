@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'MEx3'
+package_name = 'gas_leak_detection'
 
 setup(
     name=package_name,
@@ -22,15 +22,15 @@ setup(
     license='MIT',
     entry_points={
         'console_scripts': [
-            'image_publisher = MEx3.image_publisher:main',
-            'image_subscriber = MEx3.image_subscriber:main',
-            'gazzard_gui = MEx3.gazzard_gui:main',
-            'gazzard_gui_v2 = MEx3.gazzard_gui_v2:main',
-            'gazzard_gui_v3 = MEx3.gazzard_gui_v3:main',
-            'gazzard_gui_detection_final = MEx3.gazzard_gui_detection_final:main',
-            'turtlebot_publisher = MEx3.turtlebot_publisher:main',
-            'laptop_subscriber = MEx3.laptop_subscriber:main',
-            'senseair_s8_publisher = MEx3.senseair_s8_publisher:main',
+            'image_publisher = gas_leak_detection.image_publisher:main',
+            'image_subscriber = gas_leak_detection.image_subscriber:main',
+            'gazzard_gui = gas_leak_detection.gazzard_gui:main',
+            'gazzard_gui_v2 = gas_leak_detection.gazzard_gui_v2:main',
+            'gazzard_gui_v3 = gas_leak_detection.gazzard_gui_v3:main',
+            'gazzard_gui_detection_final = gas_leak_detection.gazzard_gui_detection_final:main',
+            'turtlebot_publisher = gas_leak_detection.turtlebot_publisher:main',
+            'laptop_subscriber = gas_leak_detection.laptop_subscriber:main',
+            'senseair_s8_publisher = gas_leak_detection.senseair_s8_publisher:main',
         ],
     },
 )

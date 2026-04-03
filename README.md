@@ -23,7 +23,7 @@ Manual pipe inspection in industrial and urban environments is slow, hazardous, 
 
 <table>
 <tr>
-<td>
+<td valign="top">
 
 ### 🎯 Crack Detection (YOLO-World XL)
 
@@ -38,7 +38,7 @@ Manual pipe inspection in industrial and urban environments is slow, hazardous, 
 <sub>Fine-tuned on 2,617 images (3 crack classes). Trained on NVIDIA DGX A100.</sub>
 
 </td>
-<td>
+<td valign="top">
 
 ### 🏷️ Per-Class AP@50-95
 
@@ -67,13 +67,13 @@ Manual pipe inspection in industrial and urban environments is slow, hazardous, 
 
 ## 🏗️ System Architecture
 
-This repository is a single ROS 2 `ament_python` package (`MEx3`). Clone it into your colcon workspace and build:
+This repository is a single ROS 2 `ament_python` package (`gas_leak_detection`). Clone it into your colcon workspace and build:
 
 ```bash
 cd ~/ros2_ws/src
 git clone git@github.com:gazzard-ust/gas-leak-detection.git
 cd ~/ros2_ws
-colcon build --packages-select MEx3
+colcon build --packages-select gas_leak_detection
 source install/setup.bash
 ```
 
@@ -81,11 +81,11 @@ source install/setup.bash
 
 | Node | Command | Description |
 |------|---------|-------------|
-| 📹 Image Publisher | `ros2 run MEx3 image_publisher` | Camera capture &rarr; `/image/compressed` |
-| 🖥️ Detection GUI | `ros2 run MEx3 gazzard_gui_detection_final` | Crack detection + depth + navigation + web UI |
-| 🤖 TurtleBot Publisher | `ros2 run MEx3 turtlebot_publisher` | Twist commands + timing data |
-| 💻 Laptop Subscriber | `ros2 run MEx3 laptop_subscriber` | Latency analysis &amp; logging |
-| 🌫️ CO2 Sensor | `ros2 run MEx3 senseair_s8_publisher` | SenseAir S8 Modbus/UART driver |
+| 📹 Image Publisher | `ros2 run gas_leak_detection image_publisher` | Camera capture &rarr; `/image/compressed` |
+| 🖥️ Detection GUI | `ros2 run gas_leak_detection gazzard_gui_detection_final` | Crack detection + depth + navigation + web UI |
+| 🤖 TurtleBot Publisher | `ros2 run gas_leak_detection turtlebot_publisher` | Twist commands + timing data |
+| 💻 Laptop Subscriber | `ros2 run gas_leak_detection laptop_subscriber` | Latency analysis &amp; logging |
+| 🌫️ CO2 Sensor | `ros2 run gas_leak_detection senseair_s8_publisher` | SenseAir S8 Modbus/UART driver |
 
 ### 📡 ROS 2 Topics
 
@@ -130,11 +130,11 @@ pip install torch torchvision ultralytics transformers fastapi uvicorn opencv-py
 
 # 3. Build
 cd ~/ros2_ws
-colcon build --packages-select MEx3
+colcon build --packages-select gas_leak_detection
 source install/setup.bash
 
 # 4. Download model weights (not included in repo)
-# Place best.pt in MEx3/
+# Place best.pt in gas_leak_detection/
 ```
 
 ### ▶️ Running the System
@@ -149,19 +149,19 @@ ros2 launch turtlebot3_bringup robot.launch.py
 **Terminal 2** &mdash; 🌫️ CO2 Sensor (SSH into robot):
 ```bash
 export ROS_DOMAIN_ID=27
-ros2 run MEx3 senseair_s8_publisher
+ros2 run gas_leak_detection senseair_s8_publisher
 ```
 
 **Terminal 3** &mdash; 📹 Camera Publisher (on robot):
 ```bash
 export ROS_DOMAIN_ID=27
-ros2 run MEx3 image_publisher
+ros2 run gas_leak_detection image_publisher
 ```
 
 **Terminal 4** &mdash; 🖥️ Detection GUI (laptop):
 ```bash
 export ROS_DOMAIN_ID=27
-ros2 run MEx3 gazzard_gui_detection_final
+ros2 run gas_leak_detection gazzard_gui_detection_final
 # Open http://localhost:8000 in browser
 ```
 
@@ -193,7 +193,7 @@ ros2 run MEx3 gazzard_gui_detection_final
 
 ```
 .                                          # ROS 2 package root (clone into ros2_ws/src/)
-├── MEx3/                                  # Python module — all nodes
+├── gas_leak_detection/                                  # Python module — all nodes
 │   ├── __init__.py
 │   ├── gazzard_gui_detection_final.py     # 🖥️ Production: crack detection + navigation GUI
 │   ├── gazzard_gui.py                     # Base reactive navigation GUI
@@ -205,7 +205,7 @@ ros2 run MEx3 gazzard_gui_detection_final
 │   ├── laptop_subscriber.py               # 💻 Latency analysis subscriber
 │   ├── senseair_s8_publisher.py           # 🌫️ CO2 sensor driver (Modbus/UART)
 │   └── background.png                     # Web UI background
-├── resource/MEx3                          # ament resource marker
+├── resource/gas_leak_detection                          # ament resource marker
 ├── test/                                  # Package tests
 │   ├── test_copyright.py
 │   ├── test_flake8.py
