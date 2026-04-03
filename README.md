@@ -67,14 +67,7 @@ Manual pipe inspection in industrial and urban environments is slow, hazardous, 
 
 ## 🏗️ System Architecture
 
-This repository is a ROS 2 workspace containing the `gas_leak_detection` package:
-
-```bash
-git clone git@github.com:gazzard-ust/gas-leak-detection.git
-cd gas-leak-detection
-colcon build --packages-select gas_leak_detection
-source install/setup.bash
-```
+This repository is a ROS 2 workspace containing the `gas_leak_detection` package. See [Quick Start](#-quick-start) for installation.
 
 ### 📡 ROS 2 Nodes
 
