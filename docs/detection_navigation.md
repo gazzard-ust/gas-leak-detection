@@ -62,7 +62,7 @@ pip install torch torchvision ultralytics transformers fastapi uvicorn opencv-py
 ```bash
 # Clone the repository
 git clone https://github.com/gazzard-ust/gas-leak-detection.git
-cd gas-leak-detection/SO34
+cd gas-leak-detection
 
 # Build the ROS 2 package
 colcon build --packages-select MEx3
@@ -180,16 +180,22 @@ ros2 node info /image_subscriber
 ### 📁 File Structure
 
 ```
-MEx3/
+src/MEx3/
 ├── MEx3/
 │   ├── __init__.py
-│   ├── image_publisher.py    # Camera capture and publishing
-│   └── image_subscriber.py   # Main navigation controller
-├── package.xml              # ROS package configuration
-├── setup.py                # Python package setup
-├── setup.cfg               # Package configuration
+│   ├── gazzard_gui_detection_final.py  # Production detection + navigation
+│   ├── gazzard_gui.py                  # Base reactive navigation GUI
+│   ├── gazzard_gui_v2.py              # Geometric filtering variant
+│   ├── gazzard_gui_v3.py              # Detection variant v3
+│   ├── image_publisher.py             # Camera capture and publishing
+│   ├── image_subscriber.py            # Main navigation controller
+│   └── background.png                 # Web UI background
+├── package.xml                         # ROS package configuration
+├── setup.py                           # Python package setup
+├── setup.cfg                          # Package configuration
+├── test/                              # Standard ament tests
 └── resource/
-    └── MEx3                # Package resource marker
+    └── MEx3                           # Package resource marker
 ```
 
 ### 🔑 Key Classes and Methods

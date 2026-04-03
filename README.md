@@ -67,13 +67,13 @@ Manual pipe inspection in industrial and urban environments is slow, hazardous, 
 
 ## 🏗️ System Architecture
 
-The system is organized into three specific objectives (SO):
+The system is organized into three functional areas:
 
 | Module | Description | Hardware |
 |--------|-------------|----------|
-| **SO1** &mdash; 📡 Network Latency | ROS 2 pub/sub timing analysis between TurtleBot3 and laptop | TurtleBot3 Waffle Pi |
-| **SO2** &mdash; 🌫️ CO2 Sensing | SenseAir S8 sensor driver over UART/Modbus | Raspberry Pi + SenseAir S8 |
-| **SO3 & SO4** &mdash; 👁️ Detection + Navigation | YOLO-World XL crack detection, Depth-Anything-V2 depth estimation, reactive navigation, web GUI | Laptop (CUDA optional) |
+| 📡 **Network Latency** | ROS 2 pub/sub timing analysis between TurtleBot3 and laptop | TurtleBot3 Waffle Pi |
+| 🌫️ **CO2 Sensing** | SenseAir S8 sensor driver over UART/Modbus | Raspberry Pi + SenseAir S8 |
+| 👁️ **Detection + Navigation** | YOLO-World XL crack detection, Depth-Anything-V2 depth estimation, reactive navigation, web GUI | Laptop (CUDA optional) |
 
 ### 📡 ROS 2 Topics
 
@@ -117,12 +117,11 @@ cd gas-leak-detection
 pip install torch torchvision ultralytics transformers fastapi uvicorn opencv-python pillow numpy pyserial
 
 # 3. Build the ROS 2 package
-cd SO34/src
 colcon build --packages-select MEx3
 source install/setup.bash
 
 # 4. Download model weights (not included in repo)
-# Place best.pt in SO34/src/MEx3/MEx3/
+# Place best.pt in src/MEx3/MEx3/
 ```
 
 ### ▶️ Running the System
@@ -143,13 +142,13 @@ ros2 run senseair_s8_driver senseair_s8_node
 **Terminal 3** &mdash; 📹 Camera Publisher (on robot):
 ```bash
 export ROS_DOMAIN_ID=27
-python3 image_publisher.py
+python3 nodes/image_publisher.py
 ```
 
 **Terminal 4** &mdash; 🖥️ Detection GUI (laptop):
 ```bash
 export ROS_DOMAIN_ID=27
-source SO34/install/setup.bash
+source install/setup.bash
 ros2 run MEx3 gazzard_gui_detection_final
 # Open http://localhost:8000 in browser
 ```
@@ -182,37 +181,44 @@ ros2 run MEx3 gazzard_gui_detection_final
 
 ```
 .
-├── 📡 SO1/                                    # Network latency analysis
-│   ├── turtlebot_publisher.py              # Publishes Twist + timing to /cmd_vel
-│   └── laptop_subscriber.py                # Subscribes & logs latency stats
-├── 🌫️ SO2/                                    # CO2 sensor interface
-│   ├── senseair_s8_publisher.py            # ROS 2 node for SenseAir S8 (Modbus/UART)
-│   ├── test_scripts/
-│   │   └── test_senseair_s8.py             # Standalone sensor validation
-│   └── setup_scripts/
-│       ├── install_complete_system.sh       # Full system installer
-│       └── setup_raspberry_pi_helper.sh     # Raspberry Pi setup
-├── 👁️ SO34/                                   # Detection & navigation
-│   ├── src/MEx3/
-│   │   ├── MEx3/
-│   │   │   ├── gazzard_gui_detection_final.py # Production: crack detection + navigation
-│   │   │   ├── gazzard_gui_v2.py           # Crack detection with geometric filtering
-│   │   │   ├── gazzard_gui_v3.py           # Detection variant v3
-│   │   │   ├── gazzard_gui.py              # Base reactive navigation GUI
-│   │   │   ├── image_publisher.py          # Camera capture node
-│   │   │   ├── image_subscriber.py         # Core detection + depth + navigation
-│   │   │   └── background.png              # Web UI background
-│   │   ├── setup.py                        # ROS 2 ament_python package config
-│   │   ├── package.xml                     # Package manifest
-│   │   └── test/                           # Standard ament tests
-│   ├── YOLOWORLD_FINETUNING_EXPLAINED.md   # Training methodology documentation
+├── 🧠 src/MEx3/                               # ROS 2 detection package (colcon workspace)
+│   ├── MEx3/
+│   │   ├── __init__.py
+│   │   ├── gazzard_gui_detection_final.py   # Production: crack detection + navigation
+│   │   ├── gazzard_gui.py                   # Base reactive navigation GUI
+│   │   ├── gazzard_gui_v2.py               # Crack detection with geometric filtering
+│   │   ├── gazzard_gui_v3.py               # Detection variant v3
+│   │   ├── image_publisher.py              # Camera capture node
+│   │   ├── image_subscriber.py             # Core detection + depth + navigation
+│   │   └── background.png                  # Web UI background
+│   ├── setup.py                             # ROS 2 ament_python package config
+│   ├── package.xml                          # Package manifest
+│   ├── resource/MEx3
+│   └── test/                                # Standard ament tests
+├── 📡 nodes/                                   # Standalone ROS 2 nodes
+│   ├── turtlebot_publisher.py               # Publishes Twist + timing to /cmd_vel
+│   ├── laptop_subscriber.py                 # Subscribes & logs latency stats
+│   └── senseair_s8_publisher.py             # SenseAir S8 CO2 sensor (Modbus/UART)
+├── 🔧 scripts/                                 # Setup & installation
+│   ├── install_complete_system.sh           # Full system installer
+│   └── setup_raspberry_pi_helper.sh         # Raspberry Pi UART setup
+├── 🧪 tests/                                   # Sensor validation
+│   └── test_senseair_s8.py                  # Standalone SenseAir S8 test
+├── 📚 docs/                                    # Documentation
+│   ├── detection_navigation.md              # Detailed detection & navigation docs
+│   ├── YOLOWORLD_FINETUNING_EXPLAINED.md    # Training methodology
 │   ├── EXPECTED_OUTPUTS_MEASUREMENT_GUIDE.md # Evaluation protocol
-│   ├── flow chart                          # System flow diagram
-│   └── README.md                           # SO34-specific documentation
-├── TERMINAL_COMMANDS                       # Quick-start terminal commands
+│   └── flow_chart                           # System flow diagram
+├── TERMINAL_COMMANDS                        # Quick-start terminal commands
 ├── .gitignore
-└── 📋 README.md                               # This file
+└── 📋 README.md                                # This file
 ```
+
+## 📚 Documentation
+
+- [`docs/detection_navigation.md`](docs/detection_navigation.md) &mdash; Detailed documentation for the detection and navigation subsystem
+- [`docs/YOLOWORLD_FINETUNING_EXPLAINED.md`](docs/YOLOWORLD_FINETUNING_EXPLAINED.md) &mdash; YOLOWorld fine-tuning process
+- [`docs/EXPECTED_OUTPUTS_MEASUREMENT_GUIDE.md`](docs/EXPECTED_OUTPUTS_MEASUREMENT_GUIDE.md) &mdash; Validation and measurement procedures
 
 ## 📝 Citation
 
