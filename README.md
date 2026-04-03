@@ -21,10 +21,6 @@ Manual pipe inspection in industrial and urban environments is slow, hazardous, 
 
 ## 📊 Key Results
 
-<table border="0" cellspacing="0" cellpadding="0" style="border: none;">
-<tr style="border: none;">
-<td valign="top" style="border: none;">
-
 ### 🎯 Crack Detection (YOLO-World XL)
 
 | Metric | Test Set | Val Set |
@@ -37,9 +33,6 @@ Manual pipe inspection in industrial and urban environments is slow, hazardous, 
 
 <sub>Fine-tuned on 2,617 images (3 crack classes). Trained on NVIDIA DGX A100.</sub>
 
-</td>
-<td valign="top" style="border: none;">
-
 ### 🏷️ Per-Class AP@50-95
 
 | Class | AP@50-95 | AP@50 |
@@ -49,10 +42,6 @@ Manual pipe inspection in industrial and urban environments is slow, hazardous, 
 | Paper crack | 74.0% | 97.2% |
 
 <sub>400 labels per class. Substrate complexity governs detection difficulty.</sub>
-
-</td>
-</tr>
-</table>
 
 ### ⏱️ Inference Latency (CPU, TurtleBot3 Laptop)
 
