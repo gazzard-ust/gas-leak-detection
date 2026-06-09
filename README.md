@@ -229,11 +229,11 @@ YOLO-World XL is used **zero-shot**: detection classes are supplied as open-voca
 ## 📝 Citation
 
 ```bibtex
-@inproceedings{biasbas2026gazzard,
+@inproceedings{yadao2026gazzard,
   title={Gazzard: Gas Leak Detection using a Mobile Robotic Platform},
-  author={Biasbas, Mark Kenneth and Flores, Faustino Miguel and
-          Gatchalian, Carl Christian and Velasco, Lorin Angela and
-          Yadao, Dulce Maria and Pangaliman, Ma. Madecheen and
+  author={Yadao, Dulce Maria and Biasbas, Mark Kenneth and
+          Flores, Faustino Miguel and Gatchalian, Carl Christian and
+          Velasco, Lorin Angela and Pangaliman, Ma. Madecheen and
           Bautista, Anthony James},
   booktitle={Proc. International Conference on Robotics and Automation Sciences (ICRAS)},
   year={2026}
