@@ -13,7 +13,7 @@
 
 ---
 
-**TL;DR** &mdash; A ROS 2 system that detects gas leaks on pipe infrastructure by fusing CO2 concentration sensing with visual crack detection. A TurtleBot3 equipped with a SenseAir S8 sensor monitors CO2 levels while a fine-tuned YOLO-World XL model (mAP@50-95: **86.9%**, Precision: **98.0%**, Recall: **97.5%**) and Depth-Anything-V2 monocular depth estimation identify and approach cracked pipe segments.
+**TL;DR** &mdash; A ROS 2 system that detects gas leaks on pipe infrastructure by fusing CO2 concentration sensing with visual crack detection. A TurtleBot3 equipped with a SenseAir S8 sensor monitors CO2 levels while a zero-shot YOLO-World XL model (open-vocabulary, no task-specific training; mAP@50-95: **86.9%**, Precision: **98.0%**, Recall: **97.5%**) and Depth-Anything-V2 monocular depth estimation identify and approach cracked pipe segments.
 
 ## ❓ Why This Matters
 
@@ -31,7 +31,7 @@ Manual pipe inspection in industrial and urban environments is slow, hazardous, 
 | Recall | 0.975 | 0.963 |
 | F1 | 0.978 | 0.976 |
 
-<sub>Fine-tuned on 2,617 images (3 crack classes). Trained on NVIDIA DGX A100.</sub>
+<sub>Zero-shot YOLO-World XL (open-vocabulary text prompts, no task-specific training), evaluated on 2,617 images across 3 crack classes.</sub>
 
 ### 🏷️ Per-Class AP@50-95
 
@@ -47,12 +47,23 @@ Manual pipe inspection in industrial and urban environments is slow, hazardous, 
 
 | Component | Mean &pm; Std |
 |-----------|:---:|
-| YOLO-World XL | 860.65 &pm; 52.05 ms |
-| Depth-Anything-V2 | 1019.65 &pm; 66.23 ms |
-| Total pipeline | 1880.31 &pm; 101.36 ms |
-| Throughput | **0.53 &pm; 0.03 FPS** |
+| YOLO-World XL | 892.37 &pm; 60.61 ms |
+| Depth-Anything-V2 | 1028.47 &pm; 66.53 ms |
+| Total pipeline | 1920.84 &pm; 100.58 ms |
+| Throughput | **0.52 &pm; 0.03 FPS** |
 
-<sub>92 frames, CPU-only inference. GPU deployment recommended for real-time operation.</sub>
+<sub>CPU-only inference on the TurtleBot3 laptop. GPU deployment recommended for real-time operation.</sub>
+
+### 🔀 Leak-Source Verification (CO2 + Vision Fusion)
+
+Visual crack detection alone cannot tell a *leaking* crack from a non-leaking one (CO2 is invisible). Fusing CO2 concentration with crack detection over 30 trials (15 leak / 15 no-leak) is what makes leak-source confirmation reliable:
+
+| Method | Accuracy | Precision | Recall | False-Positive Rate |
+|--------|:--------:|:---------:|:------:|:-------------------:|
+| Detection only | 46.67% | 48.28% | 93.33% | **100%** |
+| Detection + CO2 | **90.00%** | **92.86%** | 86.67% | **6.67%** |
+
+<sub>Fusion cuts the false-positive rate from 100% → 6.67% and raises accuracy from 46.67% → 90% (Wilson 95% CI: 74.4–96.5%, n=30).</sub>
 
 ## 🏗️ System Architecture
 
@@ -156,18 +167,17 @@ ros2 run gas_leak_detection gazzard_gui_detection_final
 | `GET /video_feed` | 📹 Live camera stream |
 | `GET /depth_feed` | 📐 Live depth visualization |
 
-## ⚙️ Training Configuration
+## ⚙️ Detection Configuration
+
+YOLO-World XL is used **zero-shot**: detection classes are supplied as open-vocabulary text prompts (`dummy crack`, `pvc pipe crack`, `paper crack`) with no task-specific training. Depth-Anything-V2 (ViT) supplies monocular depth for distance estimation.
 
 | Parameter | Value |
 |-----------|-------|
-| Model | YOLO-World XL (fine-tuned) |
-| Optimizer | AdamW |
-| Learning rate | 2e-4 (cosine decay to 1%) |
-| Epochs | 100 (early stopping, patience=20) |
-| Image size | 640 |
-| Augmentation | HSV, flip, mosaic, mixup, rotation, scale, shear |
-| Weight decay | 0.05 |
-| Hardware | NVIDIA DGX A100 |
+| Model | YOLO-World XL (zero-shot, open-vocabulary) |
+| Class prompts | dummy crack &middot; pvc pipe crack &middot; paper crack |
+| Inference image size | 640 |
+| Depth model | Depth-Anything-V2 |
+| Inference hardware | CPU (TurtleBot3 laptop) |
 
 ## 📁 Repository Structure
 
@@ -215,19 +225,19 @@ ros2 run gas_leak_detection gazzard_gui_detection_final
 ## 📚 Documentation
 
 - [`docs/detection_navigation.md`](docs/detection_navigation.md) &mdash; Detailed detection &amp; navigation subsystem docs
-- [`docs/YOLOWORLD_FINETUNING_EXPLAINED.md`](docs/YOLOWORLD_FINETUNING_EXPLAINED.md) &mdash; YOLOWorld fine-tuning process
+- [`docs/YOLOWORLD_FINETUNING_EXPLAINED.md`](docs/YOLOWORLD_FINETUNING_EXPLAINED.md) &mdash; YOLO-World zero-shot detection setup and class-prompt configuration
 - [`docs/EXPECTED_OUTPUTS_MEASUREMENT_GUIDE.md`](docs/EXPECTED_OUTPUTS_MEASUREMENT_GUIDE.md) &mdash; Validation and measurement procedures
 
 ## 📝 Citation
 
 ```bibtex
-@thesis{pangaliman2026gasleak,
-  title={Gas Leak Detection and Localization via CO2-Guided Crack Inspection
-         on Pipe Infrastructure Using Autonomous Mobile Robot},
-  author={Pangaliman, Ma. Madecheen S. and Biasbas, Mark Kenneth and
-          Flores, Faustino Miguel and Gatchalian, Carl Christian and
-          Velasco, Lorin Angela and Yadao, Dulce Maria},
-  school={University of the Philippines},
+@inproceedings{biasbas2026gazzard,
+  title={Gazzard: Gas Leak Detection using a Mobile Robotic Platform},
+  author={Biasbas, Mark Kenneth and Flores, Faustino Miguel and
+          Gatchalian, Carl Christian and Velasco, Lorin Angela and
+          Yadao, Dulce Maria and Pangaliman, Ma. Madecheen and
+          Bautista, Anthony James},
+  booktitle={Proc. International Conference on Robotics and Automation Sciences (ICRAS)},
   year={2026}
 }
 ```
