@@ -213,9 +213,9 @@ YOLO-World XL is used **zero-shot**: detection classes are supplied as open-voca
 │   ├── install_complete_system.sh
 │   └── setup_raspberry_pi_helper.sh
 ├── docs/                                      # 📚 Documentation
+│   ├── index.html                             # 🌐 Project page (GitHub Pages)
+│   ├── figures/                               # Project-page figures
 │   ├── detection_navigation.md
-│   ├── YOLOWORLD_FINETUNING_EXPLAINED.md
-│   ├── EXPECTED_OUTPUTS_MEASUREMENT_GUIDE.md
 │   └── flow_chart
 ├── TERMINAL_COMMANDS                          # Quick-start guide
 ├── .gitignore
@@ -225,8 +225,6 @@ YOLO-World XL is used **zero-shot**: detection classes are supplied as open-voca
 ## 📚 Documentation
 
 - [`docs/detection_navigation.md`](docs/detection_navigation.md) &mdash; Detailed detection &amp; navigation subsystem docs
-- [`docs/YOLOWORLD_FINETUNING_EXPLAINED.md`](docs/YOLOWORLD_FINETUNING_EXPLAINED.md) &mdash; YOLO-World zero-shot detection setup and class-prompt configuration
-- [`docs/EXPECTED_OUTPUTS_MEASUREMENT_GUIDE.md`](docs/EXPECTED_OUTPUTS_MEASUREMENT_GUIDE.md) &mdash; Validation and measurement procedures
 
 ## 📝 Citation
 
