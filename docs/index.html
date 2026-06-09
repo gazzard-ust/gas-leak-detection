@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gazzard: Gas Leak Detection using a Mobile Robotic Platform</title>
+  <meta name="description" content="Gazzard: a TurtleBot3 robot that fuses NDIR CO2 sensing with zero-shot YOLO-World crack detection to confirm gas leak sources in industrial environments. ICRAS 2026." />
+  <meta property="og:title" content="Gazzard: Gas Leak Detection using a Mobile Robotic Platform" />
+  <meta property="og:description" content="Threshold-based fusion of CO2 concentration and zero-shot visual crack detection cuts false positives from 100% to 6.67% and raises leak identification accuracy from 46.67% to 90%. ICRAS 2026." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1411;
+      --panel: #122019;
+      --ink: #e8f4ec;
+      --muted: #93b4a3;
+      --brand: #10b981;
+      --brand-2: #5eead4;
+      --border: #21362b;
+      --chip: #16261d;
+      --shadow: 0 2px 12px rgba(0,0,0,.32);
+      --radius-xl: 18px;
+      --radius-lg: 14px;
+      --radius-md: 10px;
+      --maxw: 1120px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+      color: var(--ink);
+      background: linear-gradient(135deg, #0b1411 0%, #122019 55%, #0a1512 100%);
+      background-attachment: fixed;
+      line-height: 1.55;
+      letter-spacing: .02em;
+    }
+    a { color: var(--brand); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .wrap { max-width: var(--maxw); margin: 0 auto; padding: 24px; }
+
+    header {
+      position: sticky; top: 0; z-index: 40; backdrop-filter: blur(10px);
+      background: linear-gradient(to bottom, rgba(11,20,17,.95), rgba(11,20,17,.8) 60%, rgba(11,20,17,0));
+      border-bottom: 1px solid var(--border);
+    }
+    .nav { display:flex; align-items:center; justify-content:space-between; gap:16px; padding: 10px 24px; }
+    .logo { font-weight: 800; letter-spacing:.03em; }
+    .nav a.btn-sm { padding:8px 14px; border-radius: 999px; border:1px solid var(--border); background: var(--panel); color: var(--ink); text-decoration:none; }
+    .nav a.btn-sm:hover { border-color: var(--brand); background: var(--chip); }
+
+    .hero { padding: 56px 0 28px; }
+    .pretitle { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius: 999px; background: var(--chip); color: var(--muted); font-weight:600; font-size: 12px; letter-spacing:.08em; text-transform:uppercase; }
+    .pretitle.award { background: rgba(212, 167, 74, .10); border:1px solid rgba(212, 167, 74, .45); color: #e3c98a; }
+    .award-row { display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin: 12px 0 4px; }
+    .award-row .pretitle.award { width:100%; justify-content:flex-start; }
+    h1 { margin: 14px 0 12px; font-size: clamp(28px, 4.2vw, 52px); line-height:1.07; letter-spacing:.01em; }
+    .subtitle { color: var(--muted); font-size: clamp(14px, 1.8vw, 17px); margin-top: 12px; max-width: 880px; }
+    .authors { margin: 18px 0 8px; display:flex; flex-wrap:wrap; gap:8px 14px; font-size: 17px; align-items:center; }
+    .authors a, .authors span { color: var(--ink); }
+    .authors a { color: var(--brand-2); font-weight: 600; text-decoration: underline; }
+    .authors a:hover { color: var(--brand); }
+    .affil { color: var(--muted); font-size: 15px; }
+    .cta-row { margin: 22px 0 0; display:flex; flex-wrap:wrap; gap:12px; }
+
+    .btn { display:inline-flex; align-items:center; gap:10px; font-weight:700; padding: 12px 18px; border-radius: 12px; border: 1px solid var(--border); text-decoration:none; transition: transform .05s ease; box-shadow: var(--shadow); }
+    .btn:hover { transform: translateY(-1px); text-decoration: none; }
+    .btn.primary {
+      background: linear-gradient(135deg, #5eead4, #10b981);
+      color: #06140f;
+      border: none;
+      box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+    }
+    .btn.primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 22px rgba(16, 185, 129, 0.5);
+    }
+    .btn.ghost { background: var(--panel); color: var(--ink); border-color: var(--border); }
+    .btn.ghost:hover { background: var(--chip); border-color: var(--brand); }
+    .btn.disabled { opacity:.55; cursor:not-allowed; pointer-events:none; }
+    .btn .soon { font-size: 11px; font-weight: 800; letter-spacing:.06em; text-transform: uppercase; background: var(--chip); color: var(--brand-2); border-radius: 999px; padding: 2px 8px; margin-left: 4px; }
+
+    section.card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 32px; margin: 26px 0; box-shadow: var(--shadow); }
+    section.card h2 { margin: 0 0 16px; font-size: clamp(22px, 2.8vw, 32px); color: var(--brand-2); font-weight: 700; }
+    section.card h3 { margin: 22px 0 8px; font-size: clamp(18px, 2vw, 22px); color: var(--ink); }
+    section.card p { margin: 12px 0; color: var(--muted); line-height: 1.7; text-align: justify; }
+    .lead { color: var(--muted); }
+
+    /* Headline numbers */
+    .stats { display:grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 8px 0 4px; }
+    .stat { background:#0a130f; border:1px solid var(--border); border-radius: var(--radius-md); padding: 18px; text-align:center; }
+    .stat .v { font-size: 30px; font-weight: 800; color: var(--brand-2); line-height:1.1; }
+    .stat .v.warn { color: #e0a86d; }
+    .stat .k { font-size: 12.5px; color: var(--muted); margin-top: 6px; line-height:1.4; }
+
+    .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; }
+
+    /* Aligned figure pair */
+    .fig-img { background:#fff; border:1px solid var(--border); border-radius: var(--radius-lg); padding: 12px; height: 280px; display:flex; align-items:center; justify-content:center; margin: 14px 0 0; }
+    .fig-img img { max-height: 100%; width: auto; max-width: 100%; margin: 0; border: none; }
+
+    img { max-width: 100%; height: auto; border-radius: var(--radius-lg); margin: 14px 0; border: 1px solid var(--border); display:block; }
+    figure { margin: 0; }
+    figcaption { color: var(--muted); font-size: 13.5px; line-height:1.6; margin: 2px 0 6px; }
+
+    .codebox {
+      background: #0a130f;
+      border-radius: var(--radius-md);
+      border:1px solid var(--border);
+      padding: 20px;
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 13px;
+      color: var(--brand-2);
+      overflow: auto;
+      white-space: pre;
+      line-height: 1.6;
+    }
+    .copy { margin-top: 14px; font-size: 13px; cursor:pointer; color: var(--ink); background: var(--panel); border:1px solid var(--border); padding: 8px 14px; border-radius: 8px; font-family: inherit; font-weight:600; }
+    .copy:hover { border-color: var(--brand); background: var(--chip); }
+
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; background: #0a130f; }
+    th, td { padding: 12px; text-align: center; border: 1px solid var(--border); }
+    td:first-child, th:first-child { text-align: left; }
+    th { background: var(--chip); color: var(--brand-2); font-weight: 600; }
+    tbody tr:hover { background: rgba(16, 185, 129, 0.06); }
+    td.hl { background: rgba(16, 185, 129, 0.18); font-weight: 700; color: var(--ink); }
+    td.bad { color: #e0a86d; font-weight: 700; }
+    .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .92em; }
+    .chips { margin-top: 14px; }
+    .chip { display:inline-block; background: var(--chip); border:1px solid var(--border); border-radius: 999px; padding: 4px 12px; font-size: 12.5px; margin: 3px; color: var(--muted); }
+
+    .specs { list-style:none; padding:0; margin: 6px 0 0; }
+    .specs li { display:flex; justify-content:space-between; gap:14px; border-bottom:1px dashed var(--border); padding:9px 2px; font-size:14px; }
+    .specs li:last-child { border-bottom:none; }
+    .specs li .k2 { color: var(--muted); }
+    .specs li .v2 { color: var(--ink); font-weight:600; text-align:right; }
+
+    footer { color: var(--muted); font-size: 13px; padding: 40px 0; text-align:center; border-top: 1px solid var(--border); margin-top: 60px; }
+
+    @media (max-width: 768px) {
+      .nav { flex-direction: column; align-items: flex-start; }
+      .hero { padding: 32px 0 20px; }
+      section.card { padding: 24px; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .grid2 { grid-template-columns: 1fr; }
+      .award-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav wrap">
+      <div class="logo">🔍 Gazzard</div>
+      <nav style="display:flex; gap:10px; flex-wrap: wrap;">
+        <a class="btn-sm" href="#abstract">Abstract</a>
+        <a class="btn-sm" href="#results">Results</a>
+        <a class="btn-sm" href="#figures">Figures</a>
+        <a class="btn-sm" href="#system">System</a>
+        <a class="btn-sm" href="#bibtex">BibTeX</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- Hero -->
+    <div class="hero">
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+        <span class="pretitle">Accepted in <a href="https://www.icras.org/" target="_blank" rel="noopener">ICRAS 2026</a></span>
+        <span class="pretitle">Sensor Fusion • Gas Leak Detection</span>
+      </div>
+
+      <h1>Gazzard: Gas Leak Detection using a Mobile Robotic Platform</h1>
+
+      <p class="subtitle">
+        CO<sub>2</sub> pipe leaks are colorless and odorless, and neither a gas sensor nor a camera is
+        reliable alone. Gazzard fuses an NDIR CO<sub>2</sub> sensor with zero-shot YOLO-World crack
+        detection on a TurtleBot3, confirming which crack is actively leaking and cutting false
+        positives from 100% to 6.67%.
+      </p>
+
+      <div class="authors">
+        <a href="https://www.linkedin.com/in/mark-kenneth-biasbas-a07051232/" target="_blank" rel="noopener">Mark Kenneth Biasbas<sup>1</sup></a>
+        <span>•</span>
+        <span>Faustino Miguel Flores<sup>1</sup></span>
+        <span>•</span>
+        <span>Carl Christian Gatchalian<sup>1</sup></span>
+        <span>•</span>
+        <span>Lorin Angela Velasco<sup>1</sup></span>
+        <span>•</span>
+        <span>Dulce Maria Yadao<sup>1</sup></span>
+        <span>•</span>
+        <a href="https://www.ust.edu.ph/profile/pangaliman-ma-madecheen-s/" target="_blank" rel="noopener">Ma. Madecheen Pangaliman<sup>1</sup></a>
+        <span>•</span>
+        <a href="https://www.ust.edu.ph/profile/bautista-anthony-james-c/" target="_blank" rel="noopener">Anthony James Bautista<sup>2</sup></a>
+      </div>
+
+      <div class="affil"><sup>1</sup>Department of Electronics Engineering, <sup>2</sup>Department of Mechanical Engineering, University of Santo Tomas, Manila, Philippines</div>
+
+      <div class="award-row">
+        <span class="pretitle award">🥇 Champion • FUSERS 2026 Video Presentation</span>
+        <span class="pretitle award">🏅 People's Choice • ECE Open Lab Exhibit</span>
+        <span class="pretitle award">🎤 Presenter • S&amp;T Undergraduate Research Symposium</span>
+        <span class="pretitle award">📌 Participant • 2026 NRCP Annual Scientific Conference &amp; 93rd GMA Poster Exhibit</span>
+      </div>
+
+      <div class="cta-row">
+        <span class="btn disabled" title="Published paper link coming soon">📄 Paper <span class="soon">Coming&nbsp;soon</span></span>
+        <a class="btn ghost" href="https://github.com/gazzard-ust/gas-leak-detection/tree/main" target="_blank" rel="noopener">💻 Code</a>
+        <a class="btn ghost" href="https://universe.roboflow.com/gazxard/pipe-crack-detection/dataset/1" target="_blank" rel="noopener">🗂️ Dataset</a>
+        <a class="btn ghost" href="#bibtex">📋 BibTeX</a>
+      </div>
+    </div>
+
+    <!-- Abstract -->
+    <section id="abstract" class="card">
+      <h2>📄 Abstract</h2>
+      <p>
+        In enclosed industrial facilities, CO<sub>2</sub> pipe leaks pose safety risks because the gas is colorless and
+        odorless, allowing it to accumulate undetected in confined spaces. While various robotic systems have been
+        deployed to automate gas leak detection, they face limitations: airflow patterns can mislead gas sensors, and
+        vision-based systems struggle to detect invisible CO<sub>2</sub> plumes or confirm whether identified cracks are
+        actively leaking. This study integrates a Senseair&nbsp;S8 NDIR CO<sub>2</sub> sensor with a zero-shot YOLO-World
+        object detection model on a TurtleBot3 Waffle&nbsp;Pi platform running ROS&nbsp;2 Humble, combining gas
+        concentration monitoring with visual crack detection and Depth-Anything-V2 depth estimation to verify leak
+        sources and reduce false alarms. Across four evaluation phases, ROS&nbsp;2 communication latency averaged
+        24.23&nbsp;ms, sensor percentage errors stayed within the &plusmn;3% tolerance (1.09–1.49%), and the detection
+        model reached an mAP@50–95 of 0.8692 for pipe crack identification. Fusing visual detection with CO<sub>2</sub>
+        concentration data increased leak identification accuracy from 46.67% to 90% and reduced false positives from
+        100% to 6.67%, showing that threshold-based sensor fusion is needed for reliable leak source confirmation.
+      </p>
+      <div class="chips">
+        <span class="chip">CO₂</span>
+        <span class="chip">gas leak detection</span>
+        <span class="chip">sensor fusion</span>
+        <span class="chip">zero-shot detection</span>
+        <span class="chip">YOLO-World</span>
+        <span class="chip">NDIR sensor</span>
+        <span class="chip">mobile robot</span>
+      </div>
+    </section>
+
+    <!-- Results -->
+    <section id="results" class="card">
+      <h2>📊 Key Results</h2>
+      <p>Evaluated over 30 controlled trials (15 leak / 15 no-leak) using dry ice to simulate CO<sub>2</sub> leaks.</p>
+
+      <div class="stats">
+        <div class="stat"><div class="v">0.869</div><div class="k">mAP<sub>50:95</sub><br>crack detection</div></div>
+        <div class="stat"><div class="v">90%</div><div class="k">Leak ID accuracy<br>fused (from 46.67%)</div></div>
+        <div class="stat"><div class="v">6.67%</div><div class="k">False positives<br>down from 100%</div></div>
+        <div class="stat"><div class="v">24.23 ms</div><div class="k">ROS 2 latency<br>distributed nodes</div></div>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <h3>Sensor Fusion vs. Detection Only</h3>
+          <div style="overflow-x:auto;">
+          <table>
+            <thead><tr><th>Method</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>FP rate</th></tr></thead>
+            <tbody>
+              <tr><td>Detection only</td><td>46.67%</td><td>48.28%</td><td>93.33%</td><td class="bad">100%</td></tr>
+              <tr><td>Detection + CO<sub>2</sub></td><td class="hl">90.00%</td><td class="hl">92.86%</td><td>86.67%</td><td class="hl">6.67%</td></tr>
+            </tbody>
+          </table>
+          </div>
+          <p style="font-size:13px; text-align:left;">Vision alone flags every crack as a leak (100% FP) because CO<sub>2</sub> is invisible. Adding the CO<sub>2</sub> threshold check recovers 14 of 15 true negatives. Wilson 95% CI for fused accuracy: 74.4–96.5% (n=30).</p>
+        </div>
+        <div>
+          <h3>Per-Class Detection (mAP<sub>50:95</sub>)</h3>
+          <div style="overflow-x:auto;">
+          <table>
+            <thead><tr><th>Crack type</th><th>Substrate</th><th>mAP<sub>50:95</sub></th></tr></thead>
+            <tbody>
+              <tr><td>Dummy crack</td><td>Smooth PVC</td><td class="hl">0.9560</td></tr>
+              <tr><td>PVC pipe crack</td><td>PVC pipe</td><td>0.9116</td></tr>
+              <tr><td>Paper core crack</td><td>Porous paper</td><td class="bad">0.7400</td></tr>
+            </tbody>
+          </table>
+          </div>
+          <p style="font-size:13px; text-align:left;">Zero-shot YOLO-World XL, mean 0.8692 across types. Detection accuracy tracks substrate texture: smoother surfaces are easier to localize than porous paper.</p>
+        </div>
+      </div>
+
+      <h3>Inference Latency (CPU, TurtleBot3 laptop)</h3>
+      <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>Component</th><th>Mean ± Std</th></tr></thead>
+        <tbody>
+          <tr><td>YOLO-World XL</td><td>892.37 ± 60.61 ms</td></tr>
+          <tr><td>Depth-Anything-V2</td><td>1028.47 ± 66.53 ms</td></tr>
+          <tr><td>Total pipeline</td><td class="hl">1920.84 ± 100.58 ms</td></tr>
+          <tr><td>Throughput</td><td>0.52 ± 0.03 FPS</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p style="font-size:13px;">CPU-only inference. Depth estimation, not detection, dominates the pipeline latency; GPU deployment is recommended for real-time operation.</p>
+    </section>
+
+    <!-- Figures -->
+    <section id="figures" class="card">
+      <h2>🖼️ Figures</h2>
+      <h3>Operational Graphical User Interface</h3>
+      <figure>
+        <img src="figures/gui_final.png" alt="Operational GUI showing live detection, CO2 reading, and depth map">
+        <figcaption>Dual-panel GUI: live camera feed with detection parameters and a <em>LEAK SOURCE FOUND</em> banner on the left, depth map for distance estimation on the right.</figcaption>
+      </figure>
+
+      <h3>Research Process Flow</h3>
+      <figure>
+        <div style="background:#fff; padding:14px; border-radius:var(--radius-lg); margin:14px 0 0;"><img src="figures/ResearchProcessFlow2.png" alt="Four-phase research process flow" style="border:none; margin:0;"></div>
+        <figcaption>Four evaluation phases: ROS 2 configuration, gas sensor validation, object detection deployment, and gas leak source identification.</figcaption>
+      </figure>
+
+      <div class="grid2">
+        <figure>
+          <div class="fig-img"><img src="figures/figso2.png" alt="Experimental setup for evaluating the gas sensor"></div>
+          <figcaption>Gas sensor evaluation setup: varying dry ice mass at a fixed distance, then varying distance at a fixed mass.</figcaption>
+        </figure>
+        <figure>
+          <div class="fig-img"><img src="figures/figso4.png" alt="Experimental setup for detecting the gas leak source"></div>
+          <figcaption>Leak source setup with PVC crack, paper-core substitute crack, and dummy crack.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- System -->
+    <section id="system" class="card">
+      <h2>🤖 System</h2>
+      <p>
+        Gazzard is a ROS&nbsp;2 Humble workspace running on a TurtleBot3 Waffle&nbsp;Pi. A distributed
+        publisher–subscriber graph streams camera frames, CO<sub>2</sub> readings, and timing data between the
+        robot and an onboard laptop, where YOLO-World and Depth-Anything-V2 run the detection pipeline.
+      </p>
+
+      <figure>
+        <div style="background:#fff; padding:14px; border-radius:var(--radius-lg); margin:14px 0 0;"><img src="figures/comms2.png" alt="ROS 2 publisher and subscriber communication flow" style="border:none; margin:0;"></div>
+        <figcaption>ROS 2 communication flow between the publisher (robot) and subscriber (laptop) nodes.</figcaption>
+      </figure>
+
+      <div class="grid2">
+        <div>
+          <h3>Hardware</h3>
+          <ul class="specs">
+            <li><span class="k2">Robot platform</span><span class="v2">TurtleBot3 Waffle Pi</span></li>
+            <li><span class="k2">CO₂ sensor</span><span class="v2">Senseair S8 (NDIR, UART)</span></li>
+            <li><span class="k2">Sensor range</span><span class="v2">400–10,000 ppm, ±40 ppm ±3%</span></li>
+            <li><span class="k2">Camera</span><span class="v2">Raspberry Pi Camera v2.1 (8MP)</span></li>
+            <li><span class="k2">Onboard OS</span><span class="v2">Ubuntu 22.04 + ROS 2 Humble</span></li>
+            <li><span class="k2">Link</span><span class="v2">5 GHz Wi-Fi</span></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Software Stack</h3>
+          <ul class="specs">
+            <li><span class="k2">Detection</span><span class="v2">YOLO-World XL (zero-shot)</span></li>
+            <li><span class="k2">Depth</span><span class="v2">Depth-Anything-V2</span></li>
+            <li><span class="k2">Class prompts</span><span class="v2">dummy / pvc pipe / paper crack</span></li>
+            <li><span class="k2">Fusion rule</span><span class="v2">Crack + elevated CO₂ → leak source</span></li>
+            <li><span class="k2">ROS 2 latency</span><span class="v2">24.23 ms avg (distributed)</span></li>
+            <li><span class="k2">UART response</span><span class="v2">21.81 ms avg</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cta-row">
+        <a class="btn primary" href="https://github.com/gazzard-ust/gas-leak-detection/tree/main" target="_blank" rel="noopener">💻 Browse the code</a>
+        <a class="btn ghost" href="https://universe.roboflow.com/gazxard/pipe-crack-detection/dataset/1" target="_blank" rel="noopener">🗂️ Dataset on Roboflow</a>
+      </div>
+    </section>
+
+    <!-- BibTeX -->
+    <section id="bibtex" class="card">
+      <h2>📝 BibTeX</h2>
+      <p>If you find this work useful in your research, please consider citing:</p>
+      <div class="codebox" id="bib">@inproceedings{biasbas2026gazzard,
+  title     = {Gazzard: Gas Leak Detection using a Mobile Robotic Platform},
+  author    = {Biasbas, Mark Kenneth and
+               Flores, Faustino Miguel and
+               Gatchalian, Carl Christian and
+               Velasco, Lorin Angela and
+               Yadao, Dulce Maria and
+               Pangaliman, Ma. Madecheen and
+               Bautista, Anthony James},
+  booktitle = {Proc. International Conference on Robotics and Automation Sciences (ICRAS)},
+  year      = {2026}
+}</div>
+      <button class="copy" onclick="navigator.clipboard.writeText(document.getElementById('bib').innerText).then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy BibTeX',1500)})">Copy BibTeX</button>
+    </section>
+
+    <!-- Acknowledgment -->
+    <section class="card">
+      <h2>🙏 Acknowledgment</h2>
+      <p>
+        The authors gratefully thank the Commission on Higher Education (CHED) for supporting this work.
+        All experimental design, data collection, model deployment, and analysis were performed by the authors.
+      </p>
+    </section>
+
+    <footer>
+      © <span id="yr"></span> Gazzard Team • University of Santo Tomas, Manila, Philippines
+      <br>
+      <span style="font-size: 11px; opacity: .7;">Accepted at the International Conference on Robotics and Automation Sciences (ICRAS) 2026</span>
+    </footer>
+  </main>
+
+  <script>
+    document.getElementById('yr').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
