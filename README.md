@@ -212,19 +212,13 @@ YOLO-World XL is used **zero-shot**: detection classes are supplied as open-voca
 ├── scripts/                                   # 🔧 Setup & installation
 │   ├── install_complete_system.sh
 │   └── setup_raspberry_pi_helper.sh
-├── docs/                                      # 📚 Documentation
-│   ├── index.html                             # 🌐 Project page (GitHub Pages)
-│   ├── figures/                               # Project-page figures
-│   ├── detection_navigation.md
-│   └── flow_chart
+├── docs/                                      # 🌐 GitHub Pages project site
+│   ├── index.html                             # Project page
+│   └── figures/                               # Project-page figures
 ├── TERMINAL_COMMANDS                          # Quick-start guide
 ├── .gitignore
 └── README.md
 ```
-
-## 📚 Documentation
-
-- [`docs/detection_navigation.md`](docs/detection_navigation.md) &mdash; Detailed detection &amp; navigation subsystem docs
 
 ## 📝 Citation
 
